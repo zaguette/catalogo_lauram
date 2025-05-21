@@ -1,0 +1,127 @@
+/* Reset e base */
+body {
+    font-family: 'Georgia', serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #fdfaf6;
+    color: #2c2c2c;
+}
+
+/* Container principal */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background-color: #fffdf8;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+}
+
+/* Títulos */
+h1, h2 {
+    color: #4b3c2b;
+    font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+}
+
+/* Menu de navegação */
+.menu {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 25px;
+    background-color: #7d5a4f;
+    padding: 12px;
+    border-radius: 8px;
+}
+
+.menu button {
+    background-color: #a1866f;
+    color: #fffdf8;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.menu button:hover {
+    background-color: #8b6b5b;
+}
+
+/* Formulários */
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: bold;
+    color: #3e3227;
+}
+
+input, select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #cfc6ba;
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-size: 16px;
+    background-color: #f9f6f2;
+}
+
+/* Botões de ação */
+button {
+    background-color: #628a5c;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #4e7049;
+}
+
+/* Tabelas */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 15px;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+}
+
+th {
+    background-color: #a1866f;
+    color: white;
+}
+
+tr:nth-child(even) {
+    background-color: #f4f1ed;
+}
+
+/* Status */
+.status-disponivel {
+    color: #3a7d44;
+    font-weight: bold;
+}
+
+.status-emprestado {
+    color: #b23b3b;
+    font-weight: bold;
+}
+
+/* Ocultar seções */
+.hidden {
+    display: none;
+}
