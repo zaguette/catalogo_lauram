@@ -1,225 +1,180 @@
-// Função para mostrar apenas a seção selecionada
-function mostrarSecao(secaoId) {
-    // Esconde todas as seções
-    document.querySelectorAll('.secao').forEach(secao => {
-        secao.classList.add('hidden');
-    });
-    
-    // Mostra apenas a seção selecionada
-    document.getElementById(secaoId).classList.remove('hidden');
+// Configuração do banco de dados
+const DB_CONFIG = {
+    host: 'localhost',
+    user: 'root',
+    password: '',
+    database: 'biblioteca_laura'
+};
+
+// Funções para interação com o banco de dados
+async function queryDatabase(sql, params = []) {
+    try {
+        const response = await fetch('api.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ sql, params })
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Erro na requisição:', error);
+        mostrarMensagem('error-message', 'Erro ao conectar com o servidor', 'error');
+        return null;
+    }
 }
 
-// Inicializa mostrando a seção de cadastro
-mostrarSecao('cadastro');
+// Funções principais atualizadas
+async function carregarLivros() {
+    const loadingElement = document.getElementById('corpo-tabela-livros');
+    loadingElement.innerHTML = '<tr><td colspan="7" style="text-align: center;">Carregando...</td></tr>';
+    
+    const result = await queryDatabase('SELECT l.*, e.pessoa_laura FROM livros_laura l LEFT JOIN emprestimos_laura e ON l.id_laura = e.id_livro_laura AND e.data_devolucao_laura IS NULL');
+    
+    if (!result || result.error) {
+        mostrarMensagem('error-message', 'Erro ao carregar livros', 'error');
+        return;
+    }
 
-// Dados simulados para demonstração
-let livros = [
-    { id: 1, titulo: "Python para Iniciantes", autor: "Ana Silva", disciplina: "Programação", disponivel: false, pessoa: "João da Silva" },
-    { id: 2, titulo: "Matemática Avançada", autor: "Carlos Souza", disciplina: "Matemática", disponivel: true, pessoa: "" },
-    { id: 3, titulo: "Literatura Brasileira", autor: "Ana Paula", disciplina: "Português", disponivel: true, pessoa: "" },
-    { id: 4, titulo: "Introdução à Programação", autor: "Laura Silva", disciplina: "Computação", disponivel: false, pessoa: "Maria Santos" }
-];
+    const corpoTabela = document.getElementById('corpo-tabela-livros');
+    corpoTabela.innerHTML = '';
+    
+    if (result.data.length === 0) {
+        corpoTabela.innerHTML = '<tr><td colspan="7" style="text-align: center;">Nenhum livro cadastrado</td></tr>';
+        return;
+    }
+    
+    result.data.forEach(livro => {
+        const linha = document.createElement('tr');
+        const dataCadastro = new Date(livro.data_cadastro_laura).toLocaleDateString();
+        
+        linha.innerHTML = `
+            <td>${livro.id_laura}</td>
+            <td>${livro.titulo_laura}</td>
+            <td>${livro.autor_laura}</td>
+            <td>${livro.disciplina_laura}</td>
+            <td><span class="${livro.disponivel_laura ? 'status-disponivel' : 'status-emprestado'}">
+                ${livro.disponivel_laura ? 'Disponível' : 'Emprestado'}
+            </span></td>
+            <td>${livro.pessoa_laura || '-'}</td>
+            <td class="data-cell">${dataCadastro}</td>
+        `;
+        
+        corpoTabela.appendChild(linha);
+    });
+}
 
-let emprestimos = [
-    { id: 1, idLivro: 1, livro: "Python para Iniciantes", pessoa: "João da Silva", dataEmprestimo: "2023-05-10", dataDevolucao: "" },
-    { id: 2, idLivro: 4, livro: "Introdução à Programação", pessoa: "Maria Santos", dataEmprestimo: "2023-05-15", dataDevolucao: "" },
-    { id: 3, idLivro: 2, livro: "Matemática Avançada", pessoa: "Carlos Oliveira", dataEmprestimo: "2023-04-20", dataDevolucao: "2023-05-05" }
-];
-
-function cadastrarLivro() {
+async function cadastrarLivro() {
     const titulo = document.getElementById('titulo').value;
     const autor = document.getElementById('autor').value;
     const disciplina = document.getElementById('disciplina').value;
     
     if (!titulo || !autor || !disciplina) {
-        document.getElementById('cadastro-resultado').innerHTML = 
-            '<p style="color: red;">Todos os campos são obrigatórios!</p>';
+        mostrarMensagem('cadastro-resultado', 'Todos os campos são obrigatórios!', 'error');
         return;
     }
     
-    // Cria novo livro
-    const novoLivro = {
-        id: livros.length > 0 ? Math.max(...livros.map(l => l.id)) + 1 : 1,
-        titulo: titulo,
-        autor: autor,
-        disciplina: disciplina,
-        disponivel: true,
-        pessoa: ""
-    };
+    const btn = document.querySelector('#cadastro button');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cadastrando...';
+    btn.disabled = true;
     
-    livros.push(novoLivro);
-    
-    document.getElementById('cadastro-resultado').innerHTML = 
-        `<p style="color: green;">Livro "${titulo}" cadastrado com sucesso! ID: ${novoLivro.id}</p>`;
-    
-    // Limpa os campos
-    document.getElementById('titulo').value = '';
-    document.getElementById('autor').value = '';
-    document.getElementById('disciplina').value = '';
-}
-
-function registrarEmprestimo() {
-    const idLivro = parseInt(document.getElementById('id-livro-emprestimo').value);
-    const pessoa = document.getElementById('pessoa').value;
-    
-    if (!idLivro || !pessoa) {
-        document.getElementById('emprestimo-resultado').innerHTML = 
-            '<p style="color: red;">Todos os campos são obrigatórios!</p>';
-        return;
-    }
-    
-    // Encontra o livro
-    const livro = livros.find(l => l.id === idLivro);
-    
-    if (!livro) {
-        document.getElementById('emprestimo-resultado').innerHTML = 
-            '<p style="color: red;">Livro não encontrado!</p>';
-        return;
-    }
-    
-    if (!livro.disponivel) {
-        document.getElementById('emprestimo-resultado').innerHTML = 
-            `<p style="color: red;">Livro já está emprestado para ${livro.pessoa}!</p>`;
-        return;
-    }
-    
-    // Atualiza status do livro
-    livro.disponivel = false;
-    livro.pessoa = pessoa;
-    
-    // Registra empréstimo
-    const novoEmprestimo = {
-        id: emprestimos.length > 0 ? Math.max(...emprestimos.map(e => e.id)) + 1 : 1,
-        idLivro: idLivro,
-        livro: livro.titulo,
-        pessoa: pessoa,
-        dataEmprestimo: new Date().toISOString().split('T')[0],
-        dataDevolucao: ""
-    };
-    
-    emprestimos.push(novoEmprestimo);
-    
-    document.getElementById('emprestimo-resultado').innerHTML = 
-        `<p style="color: green;">Empréstimo registrado com sucesso! Livro ID ${idLivro} emprestado para ${pessoa}</p>`;
-    
-    // Limpa os campos
-    document.getElementById('id-livro-emprestimo').value = '';
-    document.getElementById('pessoa').value = '';
-}
-
-function registrarDevolucao() {
-    const idLivro = parseInt(document.getElementById('id-livro-devolucao').value);
-    
-    if (!idLivro) {
-        document.getElementById('devolucao-resultado').innerHTML = 
-            '<p style="color: red;">O ID do livro é obrigatório!</p>';
-        return;
-    }
-    
-    // Encontra o livro
-    const livro = livros.find(l => l.id === idLivro);
-    
-    if (!livro) {
-        document.getElementById('devolucao-resultado').innerHTML = 
-            '<p style="color: red;">Livro não encontrado!</p>';
-        return;
-    }
-    
-    if (livro.disponivel) {
-        document.getElementById('devolucao-resultado').innerHTML = 
-            '<p style="color: red;">Este livro já está disponível!</p>';
-        return;
-    }
-    
-    // Atualiza status do livro
-    livro.disponivel = true;
-    livro.pessoa = "";
-    
-    // Atualiza empréstimo
-    const emprestimo = emprestimos.find(e => e.idLivro === idLivro && !e.dataDevolucao);
-    if (emprestimo) {
-        emprestimo.dataDevolucao = new Date().toISOString().split('T')[0];
-    }
-    
-    document.getElementById('devolucao-resultado').innerHTML = 
-        `<p style="color: green;">Devolução registrada com sucesso! Livro ID ${idLivro} foi devolvido.</p>`;
-    
-    // Limpa o campo
-    document.getElementById('id-livro-devolucao').value = '';
-}
-
-function carregarLivros() {
-    const corpoTabela = document.getElementById('corpo-tabela-livros');
-    corpoTabela.innerHTML = '';
-    
-    livros.forEach(livro => {
-        const linha = document.createElement('tr');
-        
-        linha.innerHTML = `
-            <td>${livro.id}</td>
-            <td>${livro.titulo}</td>
-            <td>${livro.autor}</td>
-            <td>${livro.disciplina}</td>
-            <td class="${livro.disponivel ? 'status-disponivel' : 'status-emprestado'}">
-                ${livro.disponivel ? 'Disponível' : 'Emprestado'}
-            </td>
-            <td>${livro.pessoa || '-'}</td>
-        `;
-        
-        corpoTabela.appendChild(linha);
-    });
-}
-
-function buscarLivros() {
-    const termo = document.getElementById('termo-busca').value.toLowerCase();
-    
-    // Filtra os livros pelo termo de busca
-    const resultados = livros.filter(livro => 
-        livro.titulo.toLowerCase().includes(termo) || 
-        livro.autor.toLowerCase().includes(termo) || 
-        livro.disciplina.toLowerCase().includes(termo)
+    const result = await queryDatabase(
+        'INSERT INTO livros_laura (titulo_laura, autor_laura, disciplina_laura) VALUES (?, ?, ?)',
+        [titulo, autor, disciplina]
     );
     
-    const corpoTabela = document.getElementById('corpo-tabela-busca');
-    corpoTabela.innerHTML = '';
+    btn.innerHTML = originalText;
+    btn.disabled = false;
     
-    if (resultados.length === 0) {
-        corpoTabela.innerHTML = '<tr><td colspan="5" style="text-align: center;">Nenhum livro encontrado</td></tr>';
+    if (result && result.lastInsertId) {
+        mostrarMensagem('cadastro-resultado', `Livro "${titulo}" cadastrado com sucesso! ID: ${result.lastInsertId}`, 'success');
+        document.getElementById('titulo').value = '';
+        document.getElementById('autor').value = '';
+        document.getElementById('disciplina').value = '';
+        carregarLivros();
+    } else {
+        mostrarMensagem('cadastro-resultado', 'Erro ao cadastrar livro', 'error');
+    }
+}
+
+// Adicione funções similares para: registrarEmprestimo, registrarDevolucao, buscarLivros, gerarRelatorioEmprestimos
+
+// Novas funções para edição e exclusão
+async function editarLivro() {
+    const id = document.getElementById('id-livro-edicao').value;
+    const novoTitulo = document.getElementById('novo-titulo').value;
+    const novoAutor = document.getElementById('novo-autor').value;
+    const novaDisciplina = document.getElementById('nova-disciplina').value;
+    
+    if (!id) {
+        mostrarMensagem('edicao-resultado', 'ID do livro é obrigatório!', 'error');
         return;
     }
     
-    resultados.forEach(livro => {
-        const linha = document.createElement('tr');
-        
-        linha.innerHTML = `
-            <td>${livro.id}</td>
-            <td>${livro.titulo}</td>
-            <td>${livro.autor}</td>
-            <td>${livro.disciplina}</td>
-            <td class="${livro.disponivel ? 'status-disponivel' : 'status-emprestado'}">
-                ${livro.disponivel ? 'Disponível' : 'Emprestado'}
-            </td>
-        `;
-        
-        corpoTabela.appendChild(linha);
-    });
+    let updates = [];
+    let params = [];
+    
+    if (novoTitulo) {
+        updates.push('titulo_laura = ?');
+        params.push(novoTitulo);
+    }
+    if (novoAutor) {
+        updates.push('autor_laura = ?');
+        params.push(novoAutor);
+    }
+    if (novaDisciplina) {
+        updates.push('disciplina_laura = ?');
+        params.push(novaDisciplina);
+    }
+    
+    if (updates.length === 0) {
+        mostrarMensagem('edicao-resultado', 'Nenhuma alteração fornecida', 'error');
+        return;
+    }
+    
+    params.push(id);
+    const sql = `UPDATE livros_laura SET ${updates.join(', ')} WHERE id_laura = ?`;
+    
+    const result = await queryDatabase(sql, params);
+    
+    if (result && result.affectedRows > 0) {
+        mostrarMensagem('edicao-resultado', 'Livro atualizado com sucesso!', 'success');
+        carregarLivros();
+    } else {
+        mostrarMensagem('edicao-resultado', 'Erro ao atualizar livro', 'error');
+    }
 }
 
-function gerarRelatorioEmprestimos() {
-    const corpoTabela = document.getElementById('corpo-tabela-relatorios');
-    corpoTabela.innerHTML = '';
+async function excluirLivro() {
+    const id = document.getElementById('id-livro-edicao').value;
     
-    emprestimos.forEach(emp => {
-        const linha = document.createElement('tr');
-        
-        linha.innerHTML = `
-            <td>${emp.id}</td>
-            <td>${emp.livro}</td>
-            <td>${emp.pessoa}</td>
-            <td>${emp.dataEmprestimo}</td>
-            <td>${emp.dataDevolucao || 'Pendente'}</td>
-        `;
-        
-        corpoTabela.appendChild(linha);
-    });
+    if (!id) {
+        mostrarMensagem('edicao-resultado', 'ID do livro é obrigatório!', 'error');
+        return;
+    }
+    
+    if (!confirm(`Tem certeza que deseja excluir o livro ID ${id}? Esta ação não pode ser desfeita.`)) {
+        return;
+    }
+    
+    const result = await queryDatabase('DELETE FROM livros_laura WHERE id_laura = ?', [id]);
+    
+    if (result && result.affectedRows > 0) {
+        mostrarMensagem('edicao-resultado', `Livro ID ${id} excluído com sucesso!`, 'success');
+        document.getElementById('id-livro-edicao').value = '';
+        document.getElementById('novo-titulo').value = '';
+        document.getElementById('novo-autor').value = '';
+        document.getElementById('nova-disciplina').value = '';
+        carregarLivros();
+    } else {
+        mostrarMensagem('edicao-resultado', 'Erro ao excluir livro', 'error');
+    }
 }
+
+// Inicialização
+document.addEventListener('DOMContentLoaded', function() {
+    carregarLivros();
+    setupBuscaInstantanea();
+    setupTooltips();
+});

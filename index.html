@@ -4,29 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Biblioteca - Laura</title>
-
-    <!-- Estilo adicional para ocultar seções -->
-    <style>
-        .hidden {
-            display: none;
-        }
-    </style>
-
-    <!-- Link para o CSS externo estilizado -->
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
-        <h1>Sistema de Biblioteca - Laura</h1>
+        <h1><i class="fas fa-book-open"></i> Sistema de Biblioteca - Laura</h1>
 
         <!-- Menu de navegação -->
         <div class="menu">
-            <button onclick="mostrarSecao('cadastro')">Cadastrar Livro</button>
-            <button onclick="mostrarSecao('emprestimo')">Empréstimo</button>
-            <button onclick="mostrarSecao('devolucao')">Devolução</button>
-            <button onclick="mostrarSecao('listagem')">Listar Livros</button>
-            <button onclick="mostrarSecao('busca')">Buscar Livros</button>
-            <button onclick="mostrarSecao('relatorios')">Relatórios</button>
+            <button onclick="mostrarSecao('cadastro')"><i class="fas fa-plus-circle"></i> Cadastrar Livro</button>
+            <button onclick="mostrarSecao('emprestimo')"><i class="fas fa-hand-holding"></i> Empréstimo</button>
+            <button onclick="mostrarSecao('devolucao')"><i class="fas fa-undo"></i> Devolução</button>
+            <button onclick="mostrarSecao('listagem')"><i class="fas fa-list"></i> Listar Livros</button>
+            <button onclick="mostrarSecao('busca')"><i class="fas fa-search"></i> Buscar Livros</button>
+            <button onclick="mostrarSecao('relatorios')"><i class="fas fa-chart-bar"></i> Relatórios</button>
+            <button onclick="mostrarSecao('edicao')"><i class="fas fa-edit"></i> Editar Livro</button>
         </div>
 
         <!-- Cadastro de Livro -->
@@ -45,7 +38,7 @@
                 <input type="text" id="disciplina" required>
             </div>
             <button onclick="cadastrarLivro()">Cadastrar Livro</button>
-            <div id="cadastro-resultado" style="margin-top: 15px;"></div>
+            <div id="cadastro-resultado" class="resultado-message"></div>
         </div>
 
         <!-- Empréstimo -->
@@ -60,7 +53,7 @@
                 <input type="text" id="pessoa" required>
             </div>
             <button onclick="registrarEmprestimo()">Registrar Empréstimo</button>
-            <div id="emprestimo-resultado" style="margin-top: 15px;"></div>
+            <div id="emprestimo-resultado" class="resultado-message"></div>
         </div>
 
         <!-- Devolução -->
@@ -71,28 +64,31 @@
                 <input type="number" id="id-livro-devolucao" required>
             </div>
             <button onclick="registrarDevolucao()">Registrar Devolução</button>
-            <div id="devolucao-resultado" style="margin-top: 15px;"></div>
+            <div id="devolucao-resultado" class="resultado-message"></div>
         </div>
 
         <!-- Listagem de Livros -->
         <div id="listagem" class="secao hidden">
             <h2>Lista de Livros</h2>
             <button onclick="carregarLivros()">Atualizar Lista</button>
-            <table id="tabela-livros">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Título</th>
-                        <th>Autor</th>
-                        <th>Disciplina</th>
-                        <th>Status</th>
-                        <th>Emprestado para</th>
-                    </tr>
-                </thead>
-                <tbody id="corpo-tabela-livros">
-                    <!-- Livros via JS -->
-                </tbody>
-            </table>
+            <div class="table-container">
+                <table id="tabela-livros">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Título</th>
+                            <th>Autor</th>
+                            <th>Disciplina</th>
+                            <th>Status</th>
+                            <th>Emprestado para</th>
+                            <th>Data Cadastro</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpo-tabela-livros">
+                        <!-- Livros via JS -->
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <!-- Busca de Livros -->
@@ -103,45 +99,71 @@
                 <input type="text" id="termo-busca" placeholder="Título, autor ou disciplina">
             </div>
             <button onclick="buscarLivros()">Buscar</button>
-            <table id="tabela-busca">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Título</th>
-                        <th>Autor</th>
-                        <th>Disciplina</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody id="corpo-tabela-busca">
-                    <!-- Resultados via JS -->
-                </tbody>
-            </table>
+            <div class="table-container">
+                <table id="tabela-busca">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Título</th>
+                            <th>Autor</th>
+                            <th>Disciplina</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpo-tabela-busca">
+                        <!-- Resultados via JS -->
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <!-- Relatórios -->
         <div id="relatorios" class="secao hidden">
             <h2>Relatórios</h2>
             <button onclick="gerarRelatorioEmprestimos()">Gerar Relatório de Empréstimos</button>
-            <table id="tabela-relatorios">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Livro</th>
-                        <th>Pessoa</th>
-                        <th>Data Empréstimo</th>
-                        <th>Data Devolução</th>
-                    </tr>
-                </thead>
-                <tbody id="corpo-tabela-relatorios">
-                    <!-- Dados via JS -->
-                </tbody>
-            </table>
+            <div class="table-container">
+                <table id="tabela-relatorios">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Livro</th>
+                            <th>Pessoa</th>
+                            <th>Data Empréstimo</th>
+                            <th>Data Devolução</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpo-tabela-relatorios">
+                        <!-- Dados via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Edição de Livro -->
+        <div id="edicao" class="secao hidden">
+            <h2>Editar Livro</h2>
+            <div class="form-group">
+                <label for="id-livro-edicao">ID do Livro:</label>
+                <input type="number" id="id-livro-edicao" required>
+            </div>
+            <div class="form-group">
+                <label for="novo-titulo">Novo Título:</label>
+                <input type="text" id="novo-titulo">
+            </div>
+            <div class="form-group">
+                <label for="novo-autor">Novo Autor:</label>
+                <input type="text" id="novo-autor">
+            </div>
+            <div class="form-group">
+                <label for="nova-disciplina">Nova Disciplina:</label>
+                <input type="text" id="nova-disciplina">
+            </div>
+            <button onclick="editarLivro()">Salvar Alterações</button>
+            <button onclick="excluirLivro()" class="btn-excluir">Excluir Livro</button>
+            <div id="edicao-resultado" class="resultado-message"></div>
         </div>
     </div>
 
-    <!-- JavaScript externo -->
     <script src="script.js"></script>
 </body>
 </html>
-
