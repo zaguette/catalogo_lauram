@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Sistema de Biblioteca - Laura</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 </head>
 <body>
     <div class="container">
@@ -27,17 +27,18 @@
             <h2>Cadastrar Novo Livro</h2>
             <div class="form-group">
                 <label for="titulo">Título:</label>
-                <input type="text" id="titulo" required>
+                <input type="text" id="titulo" required />
             </div>
             <div class="form-group">
                 <label for="autor">Autor:</label>
-                <input type="text" id="autor" required>
+                <input type="text" id="autor" required />
             </div>
             <div class="form-group">
                 <label for="disciplina">Disciplina:</label>
-                <input type="text" id="disciplina" required>
+                <input type="text" id="disciplina" required />
             </div>
-            <button onclick="cadastrarLivro()">Cadastrar Livro</button>
+            <!-- Botão com id para adicionar o event listener via JS -->
+            <button id="btnCadastrar">Cadastrar Livro</button>
             <div id="cadastro-resultado" class="resultado-message"></div>
         </div>
 
@@ -46,11 +47,11 @@
             <h2>Registrar Empréstimo</h2>
             <div class="form-group">
                 <label for="id-livro-emprestimo">ID do Livro:</label>
-                <input type="number" id="id-livro-emprestimo" required>
+                <input type="number" id="id-livro-emprestimo" required />
             </div>
             <div class="form-group">
                 <label for="pessoa">Nome da Pessoa:</label>
-                <input type="text" id="pessoa" required>
+                <input type="text" id="pessoa" required />
             </div>
             <button onclick="registrarEmprestimo()">Registrar Empréstimo</button>
             <div id="emprestimo-resultado" class="resultado-message"></div>
@@ -61,7 +62,7 @@
             <h2>Registrar Devolução</h2>
             <div class="form-group">
                 <label for="id-livro-devolucao">ID do Livro:</label>
-                <input type="number" id="id-livro-devolucao" required>
+                <input type="number" id="id-livro-devolucao" required />
             </div>
             <button onclick="registrarDevolucao()">Registrar Devolução</button>
             <div id="devolucao-resultado" class="resultado-message"></div>
@@ -96,7 +97,7 @@
             <h2>Buscar Livros</h2>
             <div class="form-group">
                 <label for="termo-busca">Termo de Busca:</label>
-                <input type="text" id="termo-busca" placeholder="Título, autor ou disciplina">
+                <input type="text" id="termo-busca" placeholder="Título, autor ou disciplina" />
             </div>
             <button onclick="buscarLivros()">Buscar</button>
             <div class="table-container">
@@ -144,19 +145,19 @@
             <h2>Editar Livro</h2>
             <div class="form-group">
                 <label for="id-livro-edicao">ID do Livro:</label>
-                <input type="number" id="id-livro-edicao" required>
+                <input type="number" id="id-livro-edicao" required />
             </div>
             <div class="form-group">
                 <label for="novo-titulo">Novo Título:</label>
-                <input type="text" id="novo-titulo">
+                <input type="text" id="novo-titulo" />
             </div>
             <div class="form-group">
                 <label for="novo-autor">Novo Autor:</label>
-                <input type="text" id="novo-autor">
+                <input type="text" id="novo-autor" />
             </div>
             <div class="form-group">
                 <label for="nova-disciplina">Nova Disciplina:</label>
-                <input type="text" id="nova-disciplina">
+                <input type="text" id="nova-disciplina" />
             </div>
             <button onclick="editarLivro()">Salvar Alterações</button>
             <button onclick="excluirLivro()" class="btn-excluir">Excluir Livro</button>
@@ -165,5 +166,20 @@
     </div>
 
     <script src="script.js"></script>
+    <script>
+    // Adiciona event listener para o botão de cadastrar após o DOM carregar
+    document.addEventListener('DOMContentLoaded', function() {
+        // Seu carregamento normal
+        carregarLivros();
+        setupBuscaInstantanea();
+        setupTooltips();
+
+        // Agora o botão funciona via JS
+        const btnCadastrar = document.getElementById('btnCadastrar');
+        if (btnCadastrar) {
+            btnCadastrar.addEventListener('click', cadastrarLivro);
+        }
+    });
+    </script>
 </body>
 </html>
