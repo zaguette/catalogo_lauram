@@ -1,180 +1,203 @@
-// Configuração do banco de dados
-const DB_CONFIG = {
-    host: 'localhost',
-    user: 'root',
-    password: '',
-    database: 'biblioteca_laura'
-};
+// Armazenamento de dados no localStorage
+const DB_NAME = 'biblioteca_laura';
 
-// Funções para interação com o banco de dados
-async function queryDatabase(sql, params = []) {
-    try {
-        const response = await fetch('api.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ sql, params })
-        });
-        return await response.json();
-    } catch (error) {
-        console.error('Erro na requisição:', error);
-        mostrarMensagem('error-message', 'Erro ao conectar com o servidor', 'error');
-        return null;
+// Função para exibir mensagens na tela
+function mostrarMensagem(idElemento, mensagem, tipo) {
+    const elemento = document.getElementById(idElemento);
+    if (!elemento) return;
+    elemento.textContent = mensagem;
+    elemento.className = "resultado-message " + (tipo === "error" ? "error" : "success");
+    setTimeout(() => {
+        elemento.textContent = "";
+        elemento.className = "resultado-message";
+    }, 4000);
+}
+
+// Função para mostrar/esconder seções
+function mostrarSecao(secaoId) {
+    document.querySelectorAll('.secao').forEach(secao => {
+        secao.classList.add('hidden');
+    });
+    
+    const secaoSelecionada = document.getElementById(secaoId);
+    if (secaoSelecionada) {
+        secaoSelecionada.classList.remove('hidden');
+    }
+    
+    if (secaoId === 'listagem') {
+        carregarLivros();
     }
 }
 
-// Funções principais atualizadas
-async function carregarLivros() {
-    const loadingElement = document.getElementById('corpo-tabela-livros');
-    loadingElement.innerHTML = '<tr><td colspan="7" style="text-align: center;">Carregando...</td></tr>';
-    
-    const result = await queryDatabase('SELECT l.*, e.pessoa_laura FROM livros_laura l LEFT JOIN emprestimos_laura e ON l.id_laura = e.id_livro_laura AND e.data_devolucao_laura IS NULL');
-    
-    if (!result || result.error) {
-        mostrarMensagem('error-message', 'Erro ao carregar livros', 'error');
-        return;
-    }
+// Funções para manipular o "banco de dados" local
+function getDatabase() {
+    const db = localStorage.getItem(DB_NAME);
+    return db ? JSON.parse(db) : { livros: [], emprestimos: [] };
+}
 
-    const corpoTabela = document.getElementById('corpo-tabela-livros');
-    corpoTabela.innerHTML = '';
-    
-    if (result.data.length === 0) {
+function saveDatabase(db) {
+    localStorage.setItem(DB_NAME, JSON.stringify(db));
+}
+
+// Função para carregar livros e mostrar na tabela
+function carregarLivros() {
+    const db = getDatabase();
+    const corpoTabela = document.getElementById("corpo-tabela-livros");
+    corpoTabela.innerHTML = "";
+
+    if (db.livros.length === 0) {
         corpoTabela.innerHTML = '<tr><td colspan="7" style="text-align: center;">Nenhum livro cadastrado</td></tr>';
         return;
     }
-    
-    result.data.forEach(livro => {
-        const linha = document.createElement('tr');
-        const dataCadastro = new Date(livro.data_cadastro_laura).toLocaleDateString();
+
+    db.livros.forEach(livro => {
+        const emprestimoAtivo = db.emprestimos.find(e => 
+            e.id_livro === livro.id && !e.data_devolucao
+        );
         
+        const linha = document.createElement("tr");
+        const dataCadastro = new Date(livro.data_cadastro).toLocaleDateString();
+
         linha.innerHTML = `
-            <td>${livro.id_laura}</td>
-            <td>${livro.titulo_laura}</td>
-            <td>${livro.autor_laura}</td>
-            <td>${livro.disciplina_laura}</td>
-            <td><span class="${livro.disponivel_laura ? 'status-disponivel' : 'status-emprestado'}">
-                ${livro.disponivel_laura ? 'Disponível' : 'Emprestado'}
-            </span></td>
-            <td>${livro.pessoa_laura || '-'}</td>
+            <td>${livro.id}</td>
+            <td>${livro.titulo}</td>
+            <td>${livro.autor}</td>
+            <td>${livro.disciplina}</td>
+            <td><span class="${!emprestimoAtivo ? "status-disponivel" : "status-emprestado"}">${!emprestimoAtivo ? "Disponível" : "Emprestado"}</span></td>
+            <td>${emprestimoAtivo ? emprestimoAtivo.pessoa : "-"}</td>
             <td class="data-cell">${dataCadastro}</td>
         `;
-        
+
         corpoTabela.appendChild(linha);
     });
 }
 
-async function cadastrarLivro() {
-    const titulo = document.getElementById('titulo').value;
-    const autor = document.getElementById('autor').value;
-    const disciplina = document.getElementById('disciplina').value;
-    
+// Função para cadastrar livro
+function cadastrarLivro() {
+    const titulo = document.getElementById("titulo").value.trim();
+    const autor = document.getElementById("autor").value.trim();
+    const disciplina = document.getElementById("disciplina").value.trim();
+
     if (!titulo || !autor || !disciplina) {
-        mostrarMensagem('cadastro-resultado', 'Todos os campos são obrigatórios!', 'error');
+        mostrarMensagem("cadastro-resultado", "Todos os campos são obrigatórios!", "error");
         return;
     }
+
+    const db = getDatabase();
+    const novoId = db.livros.length > 0 ? Math.max(...db.livros.map(l => l.id)) + 1 : 1;
     
-    const btn = document.querySelector('#cadastro button');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cadastrando...';
-    btn.disabled = true;
-    
-    const result = await queryDatabase(
-        'INSERT INTO livros_laura (titulo_laura, autor_laura, disciplina_laura) VALUES (?, ?, ?)',
-        [titulo, autor, disciplina]
+    const novoLivro = {
+        id: novoId,
+        titulo,
+        autor,
+        disciplina,
+        data_cadastro: new Date().toISOString()
+    };
+
+    db.livros.push(novoLivro);
+    saveDatabase(db);
+
+    mostrarMensagem(
+        "cadastro-resultado",
+        `Livro "${titulo}" cadastrado com sucesso! ID: ${novoId}`,
+        "success"
     );
     
-    btn.innerHTML = originalText;
-    btn.disabled = false;
-    
-    if (result && result.lastInsertId) {
-        mostrarMensagem('cadastro-resultado', `Livro "${titulo}" cadastrado com sucesso! ID: ${result.lastInsertId}`, 'success');
-        document.getElementById('titulo').value = '';
-        document.getElementById('autor').value = '';
-        document.getElementById('disciplina').value = '';
-        carregarLivros();
-    } else {
-        mostrarMensagem('cadastro-resultado', 'Erro ao cadastrar livro', 'error');
-    }
-}
-
-// Adicione funções similares para: registrarEmprestimo, registrarDevolucao, buscarLivros, gerarRelatorioEmprestimos
-
-// Novas funções para edição e exclusão
-async function editarLivro() {
-    const id = document.getElementById('id-livro-edicao').value;
-    const novoTitulo = document.getElementById('novo-titulo').value;
-    const novoAutor = document.getElementById('novo-autor').value;
-    const novaDisciplina = document.getElementById('nova-disciplina').value;
-    
-    if (!id) {
-        mostrarMensagem('edicao-resultado', 'ID do livro é obrigatório!', 'error');
-        return;
-    }
-    
-    let updates = [];
-    let params = [];
-    
-    if (novoTitulo) {
-        updates.push('titulo_laura = ?');
-        params.push(novoTitulo);
-    }
-    if (novoAutor) {
-        updates.push('autor_laura = ?');
-        params.push(novoAutor);
-    }
-    if (novaDisciplina) {
-        updates.push('disciplina_laura = ?');
-        params.push(novaDisciplina);
-    }
-    
-    if (updates.length === 0) {
-        mostrarMensagem('edicao-resultado', 'Nenhuma alteração fornecida', 'error');
-        return;
-    }
-    
-    params.push(id);
-    const sql = `UPDATE livros_laura SET ${updates.join(', ')} WHERE id_laura = ?`;
-    
-    const result = await queryDatabase(sql, params);
-    
-    if (result && result.affectedRows > 0) {
-        mostrarMensagem('edicao-resultado', 'Livro atualizado com sucesso!', 'success');
-        carregarLivros();
-    } else {
-        mostrarMensagem('edicao-resultado', 'Erro ao atualizar livro', 'error');
-    }
-}
-
-async function excluirLivro() {
-    const id = document.getElementById('id-livro-edicao').value;
-    
-    if (!id) {
-        mostrarMensagem('edicao-resultado', 'ID do livro é obrigatório!', 'error');
-        return;
-    }
-    
-    if (!confirm(`Tem certeza que deseja excluir o livro ID ${id}? Esta ação não pode ser desfeita.`)) {
-        return;
-    }
-    
-    const result = await queryDatabase('DELETE FROM livros_laura WHERE id_laura = ?', [id]);
-    
-    if (result && result.affectedRows > 0) {
-        mostrarMensagem('edicao-resultado', `Livro ID ${id} excluído com sucesso!`, 'success');
-        document.getElementById('id-livro-edicao').value = '';
-        document.getElementById('novo-titulo').value = '';
-        document.getElementById('novo-autor').value = '';
-        document.getElementById('nova-disciplina').value = '';
-        carregarLivros();
-    } else {
-        mostrarMensagem('edicao-resultado', 'Erro ao excluir livro', 'error');
-    }
-}
-
-// Inicialização
-document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById("titulo").value = "";
+    document.getElementById("autor").value = "";
+    document.getElementById("disciplina").value = "";
     carregarLivros();
-    setupBuscaInstantanea();
-    setupTooltips();
+}
+
+// Função para registrar empréstimo
+function registrarEmprestimo() {
+    const idLivro = parseInt(document.getElementById("id-livro-emprestimo").value.trim());
+    const pessoa = document.getElementById("pessoa").value.trim();
+
+    if (!idLivro || !pessoa) {
+        mostrarMensagem("emprestimo-resultado", "Todos os campos são obrigatórios!", "error");
+        return;
+    }
+
+    const db = getDatabase();
+    const livro = db.livros.find(l => l.id === idLivro);
+    
+    if (!livro) {
+        mostrarMensagem("emprestimo-resultado", "Livro não encontrado!", "error");
+        return;
+    }
+
+    // Verifica se já está emprestado
+    const emprestimoAtivo = db.emprestimos.find(e => 
+        e.id_livro === idLivro && !e.data_devolucao
+    );
+    
+    if (emprestimoAtivo) {
+        mostrarMensagem("emprestimo-resultado", "Este livro já está emprestado!", "error");
+        return;
+    }
+
+    const novoEmprestimo = {
+        id_livro: idLivro,
+        pessoa,
+        data_emprestimo: new Date().toISOString(),
+        data_devolucao: null
+    };
+
+    db.emprestimos.push(novoEmprestimo);
+    saveDatabase(db);
+
+    mostrarMensagem("emprestimo-resultado", "Empréstimo registrado com sucesso!", "success");
+    document.getElementById("id-livro-emprestimo").value = "";
+    document.getElementById("pessoa").value = "";
+    carregarLivros();
+}
+
+// Função para registrar devolução
+function registrarDevolucao() {
+    const idLivro = parseInt(document.getElementById("id-livro-devolucao").value.trim());
+
+    if (!idLivro) {
+        mostrarMensagem("devolucao-resultado", "ID do livro é obrigatório!", "error");
+        return;
+    }
+
+    const db = getDatabase();
+    const emprestimo = db.emprestimos.find(e => 
+        e.id_livro === idLivro && !e.data_devolucao
+    );
+    
+    if (!emprestimo) {
+        mostrarMensagem("devolucao-resultado", "Nenhum empréstimo ativo encontrado para este livro!", "error");
+        return;
+    }
+
+    emprestimo.data_devolucao = new Date().toISOString();
+    saveDatabase(db);
+
+    mostrarMensagem("devolucao-resultado", "Devolução registrada com sucesso!", "success");
+    document.getElementById("id-livro-devolucao").value = "";
+    carregarLivros();
+}
+
+// Inicialização dos eventos
+document.addEventListener("DOMContentLoaded", function () {
+    // Mostra a seção de cadastro por padrão
+    mostrarSecao('cadastro');
+    
+    // Associa os eventos aos botões
+    document.getElementById("btnCadastrar").addEventListener("click", cadastrarLivro);
+    
+    // Adiciona eventos para os botões que estavam com onclick no HTML
+    document.querySelector("button[onclick=\"registrarEmprestimo()\"]").addEventListener("click", registrarEmprestimo);
+    document.querySelector("button[onclick=\"registrarDevolucao()\"]").addEventListener("click", registrarDevolucao);
+    
+    // Remove os atributos onclick do HTML
+    document.querySelector("button[onclick=\"registrarEmprestimo()\"]").removeAttribute("onclick");
+    document.querySelector("button[onclick=\"registrarDevolucao()\"]").removeAttribute("onclick");
+    
+    // Carrega os livros se estiver na seção de listagem
+    if (!document.getElementById('listagem').classList.contains('hidden')) {
+        carregarLivros();
+    }
 });

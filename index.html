@@ -5,7 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Sistema de Biblioteca - Laura</title>
     <link rel="stylesheet" href="style.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
 </head>
 <body>
     <div class="container">
@@ -37,7 +40,7 @@
                 <label for="disciplina">Disciplina:</label>
                 <input type="text" id="disciplina" required />
             </div>
-            <!-- Botão com id para adicionar o event listener via JS -->
+            <!-- Botão agora com id e sem onclick inline -->
             <button id="btnCadastrar">Cadastrar Livro</button>
             <div id="cadastro-resultado" class="resultado-message"></div>
         </div>
@@ -97,7 +100,11 @@
             <h2>Buscar Livros</h2>
             <div class="form-group">
                 <label for="termo-busca">Termo de Busca:</label>
-                <input type="text" id="termo-busca" placeholder="Título, autor ou disciplina" />
+                <input
+                  type="text"
+                  id="termo-busca"
+                  placeholder="Título, autor ou disciplina"
+                />
             </div>
             <button onclick="buscarLivros()">Buscar</button>
             <div class="table-container">
@@ -121,7 +128,9 @@
         <!-- Relatórios -->
         <div id="relatorios" class="secao hidden">
             <h2>Relatórios</h2>
-            <button onclick="gerarRelatorioEmprestimos()">Gerar Relatório de Empréstimos</button>
+            <button onclick="gerarRelatorioEmprestimos()">
+              Gerar Relatório de Empréstimos
+            </button>
             <div class="table-container">
                 <table id="tabela-relatorios">
                     <thead>
@@ -166,20 +175,6 @@
     </div>
 
     <script src="script.js"></script>
-    <script>
-    // Adiciona event listener para o botão de cadastrar após o DOM carregar
-    document.addEventListener('DOMContentLoaded', function() {
-        // Seu carregamento normal
-        carregarLivros();
-        setupBuscaInstantanea();
-        setupTooltips();
-
-        // Agora o botão funciona via JS
-        const btnCadastrar = document.getElementById('btnCadastrar');
-        if (btnCadastrar) {
-            btnCadastrar.addEventListener('click', cadastrarLivro);
-        }
-    });
-    </script>
 </body>
 </html>
+
